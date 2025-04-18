@@ -1,0 +1,883 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold mb-3">Reports & Analytics</h1>
+            <p class="lead text-muted mb-4">Analyze your spending patterns and track your financial progress.</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="reportType">Report Type</label>
+                <select class="form-control" id="reportType">
+                    <option value="category">Category Breakdown</option>
+                    <option value="trend">Expense Trends</option>
+                    <option value="budget">Budget vs Actual</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="dateRange">Date Range</label>
+                <select class="form-control" id="dateRange">
+                    <option value="30">Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="180">Last 6 Months</option>
+                    <option value="365">Last Year</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <button class="btn btn-primary" id="generateReport">
+                <i class="bi bi-graph-up me-2"></i>Generate Report
+            </button>
+            <button class="btn btn-outline-secondary ms-2" id="toggleDebugBtn">
+                <i class="bi bi-bug me-2"></i>Debug Info
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div class="row mb-4" id="loadingIndicator" style="display: none;">
+        <div class="col-12 text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading report data...</p>
+        </div>
+    </div>
+
+    <!-- Debug info -->
+    <div class="row mb-4" id="debugInfo" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Debug Information</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Raw Response Data:</h6>
+                    <pre id="debugResponse" class="bg-light p-3" style="max-height: 300px; overflow-y: auto;"></pre>
+
+                    <h6 class="mt-3">Categories Found:</h6>
+                    <ul id="debugCategories" class="list-group"></ul>
+
+                    <h6 class="mt-3">Chart Configuration:</h6>
+                    <pre id="debugChartConfig" class="bg-light p-3" style="max-height: 300px; overflow-y: auto;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- No data message -->
+    <div class="row mb-4" id="noDataMessage" style="display: none;">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h4 class="alert-heading">No Data Available</h4>
+                <p>There are no expenses recorded for the selected time period. Add some expenses to see your reports.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report content -->
+    <div id="reportContent" style="display: none;">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div style="position: relative; height: 400px;">
+                            <canvas id="reportChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card text-center mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Expenses</h5>
+                        <p class="card-text h3" id="totalExpenses">$0.00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Average Daily</h5>
+                        <p class="card-text h3" id="avgDaily">$0.00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Highest Category</h5>
+                        <p class="card-text h3" id="highestCategory">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Budget Status</h5>
+                        <p class="card-text h3" id="budgetStatus">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Table (for category breakdown) -->
+        <div class="row mt-4" id="categoryTableContainer" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Category Breakdown</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th>Amount</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categoryTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<script>
+    console.log('Reports script loaded');
+    let reportChart = null;
+    let rawResponseData = null;
+    let chartConfiguration = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('DOM content loaded for reports page');
+
+        // Add event listener for generate report button
+        const generateReportBtn = document.getElementById('generateReport');
+        if (generateReportBtn) {
+            console.log('Generate report button found');
+            generateReportBtn.addEventListener('click', generateReport);
+        } else {
+            console.error('Generate report button not found!');
+        }
+
+        // Add event listener for debug toggle
+        document.getElementById('toggleDebugBtn').addEventListener('click', function () {
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Generate initial report
+        console.log('Generating initial report');
+        generateReport();
+    });
+
+    // Function to generate report
+    function generateReport() {
+        console.log('Generate report function called');
+        const reportType = document.getElementById('reportType').value;
+        const dateRange = document.getElementById('dateRange').value;
+
+        console.log('Report type:', reportType, 'Date range:', dateRange);
+
+        // Reset previous report data
+        document.getElementById('reportContent').style.display = 'none';
+        document.getElementById('noDataMessage').style.display = 'none';
+        document.getElementById('categoryTableContainer').style.display = 'none';
+
+        // Show loading indicator
+        document.getElementById('loadingIndicator').style.display = 'block';
+
+        // Determine API endpoint
+        let apiEndpoint = '';
+        switch (reportType) {
+            case 'category':
+                apiEndpoint = '/api/reports/category';
+                break;
+            case 'trend':
+            case 'budget':
+                apiEndpoint = '/api/reports/monthly';
+                break;
+            default:
+                apiEndpoint = '/api/reports/monthly';
+        }
+
+        // Add query parameters
+        apiEndpoint += `?dateRange=${dateRange}`;
+
+        console.log('Fetching data from:', apiEndpoint);
+
+        // Make API call
+        fetch(apiEndpoint)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(response => {
+                console.log('API response received:', response);
+
+                // Check if response has expected structure
+                if (!response || !response.success) {
+                    throw new Error(response.message || 'Invalid response from server');
+                }
+
+                // Hide loading indicator
+                document.getElementById('loadingIndicator').style.display = 'none';
+
+                // Get data from response
+                const data = response.data;
+
+                // Update debug information
+                rawResponseData = response;
+                updateDebugInfo(response);
+
+                // Check if we have expenses data
+                if (!data.expenses || data.expenses.length === 0) {
+                    console.log('No expenses data found');
+                    document.getElementById('noDataMessage').style.display = 'block';
+                    resetChartAndStats();
+                    return;
+                }
+
+                // Show report content
+                document.getElementById('reportContent').style.display = 'block';
+
+                // Show category table for category breakdown
+                if (reportType === 'category') {
+                    document.getElementById('categoryTableContainer').style.display = 'block';
+                    updateCategoryTable(data);
+                }
+
+                console.log('Updating chart and stats');
+                updateChart(data, reportType);
+                updateSummaryStats(data);
+            })
+            .catch(error => {
+                console.error('Error generating report:', error);
+
+                // Hide loading indicator and show error
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('noDataMessage').style.display = 'block';
+                document.querySelector('#noDataMessage .alert-heading').textContent = 'Error';
+                document.querySelector('#noDataMessage p').textContent = error.message || 'Failed to generate report. Please try again.';
+
+                resetChartAndStats();
+            });
+    }
+
+    // Function to update debug information
+    function updateDebugInfo(response) {
+        if (!response || !response.data) return;
+
+        // Update raw response display
+        document.getElementById('debugResponse').textContent =
+            JSON.stringify(response, null, 2);
+
+        // Update categories list
+        const categoriesList = document.getElementById('debugCategories');
+        categoriesList.innerHTML = '';
+
+        const data = response.data;
+
+        if (data.debug && data.debug.all_categories) {
+            data.debug.all_categories.forEach(category => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.textContent = category;
+
+                // Add badge for count if available
+                if (data.debug.category_amounts && data.debug.category_amounts[category]) {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-primary rounded-pill';
+                    badge.textContent = '$' + data.debug.category_amounts[category].toFixed(2);
+                    li.appendChild(badge);
+                }
+
+                categoriesList.appendChild(li);
+            });
+        } else if (data.expenses) {
+            // Extract categories from expenses
+            const categories = {};
+            data.expenses.forEach(item => {
+                if (!categories[item.category]) {
+                    categories[item.category] = 0;
+                }
+                categories[item.category] += parseFloat(item.amount);
+            });
+
+            Object.entries(categories).forEach(([category, amount]) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.textContent = category;
+
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary rounded-pill';
+                badge.textContent = '$' + amount.toFixed(2);
+                li.appendChild(badge);
+
+                categoriesList.appendChild(li);
+            });
+        }
+    }
+
+    // Function to update category table
+    function updateCategoryTable(data) {
+        const tableBody = document.getElementById('categoryTableBody');
+        tableBody.innerHTML = '';
+
+        if (!data.expenses || data.expenses.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center">No data available</td></tr>';
+            return;
+        }
+
+        // Group by category and calculate totals
+        const categoryTotals = {};
+        data.expenses.forEach(item => {
+            const category = item.category;
+            const amount = parseFloat(item.amount);
+
+            if (categoryTotals[category]) {
+                categoryTotals[category] += amount;
+            } else {
+                categoryTotals[category] = amount;
+            }
+        });
+
+        // Calculate total and percentages
+        const totalAmount = Object.values(categoryTotals).reduce((sum, amount) => sum + amount, 0);
+
+        // Sort categories by amount (descending)
+        const sortedCategories = Object.entries(categoryTotals)
+            .sort((a, b) => b[1] - a[1])
+            .map(([category, amount]) => ({
+                category,
+                amount,
+                percentage: (amount / totalAmount) * 100
+            }));
+
+        // Add rows to table
+        sortedCategories.forEach(item => {
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+                <td>${item.category}</td>
+                <td>$${item.amount.toFixed(2)}</td>
+                <td>${item.percentage.toFixed(1)}%</td>
+            `;
+        });
+    }
+
+    // Function to reset chart and statistics
+    function resetChartAndStats() {
+        console.log('Resetting chart and stats');
+        if (reportChart) {
+            reportChart.destroy();
+            reportChart = null;
+        }
+        document.getElementById('totalExpenses').textContent = '$0.00';
+        document.getElementById('avgDaily').textContent = '$0.00';
+        document.getElementById('highestCategory').textContent = '-';
+        document.getElementById('budgetStatus').textContent = '-';
+    }
+
+    function updateChart(data, reportType) {
+        console.log('Updating chart with data for type:', reportType);
+        const chartElement = document.getElementById('reportChart');
+        if (!chartElement) {
+            console.error('Chart canvas element not found!');
+            return;
+        }
+
+        const ctx = chartElement.getContext('2d');
+        console.log('Chart context obtained');
+
+        if (reportChart) {
+            console.log('Destroying existing chart');
+            reportChart.destroy();
+        }
+
+        let chartConfig = {
+            type: reportType === 'category' ? 'pie' : 'line',
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1500,
+                    easing: 'easeOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: getChartTitle(reportType),
+                        font: {
+                            size: 18,
+                            weight: 'bold'
+                        },
+                        padding: {
+                            top: 10,
+                            bottom: 20
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== undefined) {
+                                    if (reportType === 'category') {
+                                        const value = context.parsed;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((value / total) * 100);
+                                        label += `$${value.toFixed(2)} (${percentage}%)`;
+                                    } else {
+                                        label += '$' + context.parsed.y.toFixed(2);
+                                    }
+                                }
+                                return label;
+                            }
+                        },
+                        padding: 12,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 14
+                        }
+                    }
+                }
+            }
+        };
+
+        console.log('Chart config created');
+
+        if (reportType === 'category') {
+            // First, let's see what data we actually have
+            console.log('Raw data received:', data);
+
+            // Get expenses from data
+            let categoryData = [];
+            if (data && data.expenses && Array.isArray(data.expenses)) {
+                categoryData = data.expenses;
+                console.log('Using expenses data array with', categoryData.length, 'items');
+            } else {
+                console.error('Invalid or missing expenses data');
+                return;
+            }
+
+            // Log the raw data to help with debugging
+            console.log('Raw category data:', categoryData);
+
+            // Group by category and sum amounts
+            const categoryTotals = {};
+            categoryData.forEach(item => {
+                const category = item.category;
+                // Make sure we have a valid number for amount
+                const amount = parseFloat(typeof item.amount === 'number' ? item.amount : item.amount || 0);
+
+                // Skip items with invalid or zero amounts
+                if (isNaN(amount) || amount <= 0) {
+                    console.warn('Skipping item with invalid amount:', item);
+                    return;
+                }
+
+                // Add to appropriate category
+                if (!categoryTotals[category]) {
+                    categoryTotals[category] = 0;
+                }
+                categoryTotals[category] += amount;
+            });
+
+            console.log('Grouped category totals:', categoryTotals);
+
+            // Check if we have any valid categories after processing
+            if (Object.keys(categoryTotals).length === 0) {
+                console.warn('No valid categories with positive amounts found');
+                chartConfig.data = {
+                    labels: ['No Data'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: ['#e0e0e0']
+                    }]
+                };
+            } else {
+                // Sort categories by amount for better visualization
+                const sortedEntries = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+
+                const sortedCategories = sortedEntries.map(entry => entry[0]);
+                const sortedAmounts = sortedEntries.map(entry => entry[1]);
+
+                console.log('Final sorted categories:', sortedCategories);
+                console.log('Final sorted amounts:', sortedAmounts);
+
+                // Generate colors for each category (one unique color per category)
+                const colors = getRandomColors(sortedCategories.length);
+
+                // Configure the chart data
+                chartConfig.data = {
+                    labels: sortedCategories,
+                    datasets: [{
+                        data: sortedAmounts,
+                        backgroundColor: colors,
+                        borderColor: colors.map(color => color.replace('0.7', '1')),
+                        hoverOffset: 15,
+                        borderWidth: 2
+                    }]
+                };
+            }
+        } else if (reportType === 'trend') {
+            // Existing trend report code
+            const expenses = data.expenses || [];
+            console.log('Processing trend data, expenses count:', expenses.length);
+
+            // Sort by date
+            expenses.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (expenses.length === 0) {
+                console.log('No expenses found for trend data');
+                // If no expenses, show a placeholder line
+                chartConfig.data = {
+                    labels: ['No Data'],
+                    datasets: [{
+                        label: 'Expenses',
+                        data: [0],
+                        borderColor: '#4CAF50',
+                        tension: 0.1,
+                        fill: false
+                    }]
+                };
+            } else {
+                // Group data by date and category for a more detailed chart
+                const dateMap = {};
+
+                // Group expenses by date
+                expenses.forEach(item => {
+                    const date = formatDate(item.date);
+                    const amount = parseFloat(item.amount);
+
+                    if (!dateMap[date]) {
+                        dateMap[date] = amount;
+                    } else {
+                        dateMap[date] += amount;
+                    }
+                });
+
+                // Convert to arrays for chart
+                const sortedDates = Object.keys(dateMap).sort((a, b) => new Date(a) - new Date(b));
+                const amounts = sortedDates.map(date => dateMap[date]);
+
+                console.log('Dates:', sortedDates);
+                console.log('Amounts:', amounts);
+
+                chartConfig.data = {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Expenses',
+                        data: amounts,
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#4CAF50',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                };
+            }
+
+            chartConfig.options.scales = {
+                x: {
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function (value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                }
+            };
+        } else {
+            // For budget report, do a category comparison
+            const categoryTotals = {};
+            const categoryBudgets = {};
+
+            // Get category totals from expenses
+            data.expenses.forEach(item => {
+                const category = item.category;
+                const amount = parseFloat(item.amount);
+
+                if (categoryTotals[category]) {
+                    categoryTotals[category] += amount;
+                } else {
+                    categoryTotals[category] = amount;
+                }
+            });
+
+            // Get budgets
+            if (data.category_breakdown) {
+                Object.entries(data.category_breakdown).forEach(([category, info]) => {
+                    categoryBudgets[category] = parseFloat(info.budget) || 0;
+                });
+            } else if (data.budgets) {
+                Object.entries(data.budgets).forEach(([category, amount]) => {
+                    categoryBudgets[category] = parseFloat(amount) || 0;
+                });
+            }
+
+            // Create datasets
+            const categories = Array.from(new Set([
+                ...Object.keys(categoryTotals),
+                ...Object.keys(categoryBudgets)
+            ]));
+
+            const spentAmounts = categories.map(category => categoryTotals[category] || 0);
+            const budgetAmounts = categories.map(category => categoryBudgets[category] || 0);
+
+            console.log('Categories:', categories);
+            console.log('Spent:', spentAmounts);
+            console.log('Budget:', budgetAmounts);
+
+            chartConfig.type = 'bar';
+            chartConfig.data = {
+                labels: categories,
+                datasets: [
+                    {
+                        label: 'Spent',
+                        data: spentAmounts,
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                        borderColor: 'rgb(255, 99, 132)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Budget',
+                        data: budgetAmounts,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        borderWidth: 1
+                    }
+                ]
+            };
+        }
+
+        // Store chart configuration for debugging
+        chartConfiguration = chartConfig;
+        document.getElementById('debugChartConfig').textContent =
+            JSON.stringify(chartConfig, null, 2);
+
+        console.log('Final chart config:', chartConfig);
+        try {
+            console.log('Creating new chart');
+            reportChart = new Chart(ctx, chartConfig);
+            console.log('Chart created successfully');
+        } catch (error) {
+            console.error('Error creating chart:', error);
+        }
+    }
+
+    function updateSummaryStats(data) {
+        console.log('Updating summary stats');
+        const expenses = data.expenses || [];
+        let totalExpenses = data.total_spent || 0;
+        let categoryTotals = {};
+
+        // Calculate category totals
+        expenses.forEach(item => {
+            const amount = parseFloat(item.amount);
+            if (categoryTotals[item.category]) {
+                categoryTotals[item.category] += amount;
+            } else {
+                categoryTotals[item.category] = amount;
+            }
+        });
+
+        console.log('Category totals:', categoryTotals);
+
+        // Find highest category
+        let highestCategory = null;
+        let highestAmount = 0;
+
+        Object.entries(categoryTotals).forEach(([category, amount]) => {
+            if (amount > highestAmount) {
+                highestAmount = amount;
+                highestCategory = category;
+            }
+        });
+
+        console.log('Highest category:', highestCategory, 'Amount:', highestAmount);
+
+        // Calculate average daily
+        const startDate = new Date(data.start_date);
+        const endDate = new Date(data.end_date);
+        const daysDiff = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
+        const avgDaily = totalExpenses / daysDiff;
+
+        console.log('Date range:', startDate, 'to', endDate, 'Days:', daysDiff, 'Avg daily:', avgDaily);
+
+        // Update DOM
+        document.getElementById('totalExpenses').textContent = formatCurrency(totalExpenses);
+        document.getElementById('avgDaily').textContent = formatCurrency(avgDaily);
+
+        if (highestCategory) {
+            document.getElementById('highestCategory').textContent =
+                `${highestCategory} (${formatCurrency(highestAmount)})`;
+        } else {
+            document.getElementById('highestCategory').textContent = '-';
+        }
+
+        // Update budget status
+        try {
+            const budgetStatus = document.getElementById('budgetStatus');
+            console.log('Budget data:', data.category_breakdown);
+
+            if (data.category_breakdown && Object.keys(data.category_breakdown).length > 0) {
+                let totalBudget = 0;
+
+                Object.values(data.category_breakdown).forEach(cat => {
+                    totalBudget += parseFloat(cat.budget || 0);
+                });
+
+                console.log('Total budget from category breakdown:', totalBudget);
+
+                if (totalBudget > 0) {
+                    const percentage = (totalExpenses / totalBudget) * 100;
+                    budgetStatus.textContent = `${percentage.toFixed(1)}% of budget used`;
+                } else {
+                    budgetStatus.textContent = 'No budget set';
+                }
+            } else if (data.budgets && Object.keys(data.budgets).length > 0) {
+                const totalBudget = Object.values(data.budgets).reduce((sum, val) => sum + parseFloat(val), 0);
+                console.log('Total budget from budgets:', totalBudget);
+
+                if (totalBudget > 0) {
+                    const percentage = (totalExpenses / totalBudget) * 100;
+                    budgetStatus.textContent = `${percentage.toFixed(1)}% of budget used`;
+                } else {
+                    budgetStatus.textContent = 'No budget set';
+                }
+            } else {
+                budgetStatus.textContent = 'No budget set';
+            }
+        } catch (error) {
+            console.error('Error updating budget status:', error);
+            document.getElementById('budgetStatus').textContent = 'Error';
+        }
+    }
+
+    // Helper function to format currency
+    function formatCurrency(amount) {
+        return '$' + parseFloat(amount).toFixed(2);
+    }
+
+    // Helper function to format date
+    function formatDate(dateString) {
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString();
+        } catch (error) {
+            console.error('Error formatting date:', dateString, error);
+            return 'Invalid Date';
+        }
+    }
+
+    function getChartTitle(reportType) {
+        switch (reportType) {
+            case 'category':
+                return 'Expenses by Category';
+            case 'trend':
+                return 'Expense Trends Over Time';
+            case 'budget':
+                return 'Budget vs Actual Spending';
+            default:
+                return 'Expense Report';
+        }
+    }
+
+    function getRandomColors(count) {
+        // Predefined vibrant colors for better visualization
+        const colors = [
+            '#4CAF50', // Green
+            '#2196F3', // Blue
+            '#F44336', // Red
+            '#FF9800', // Orange
+            '#9C27B0', // Purple
+            '#FFEB3B', // Yellow
+            '#795548', // Brown
+            '#00BCD4', // Cyan
+            '#E91E63', // Pink
+            '#607D8B', // Blue Grey
+            '#3F51B5', // Indigo
+            '#009688', // Teal
+            '#FFC107', // Amber
+            '#673AB7', // Deep Purple
+            '#8BC34A', // Light Green
+            '#FF5722', // Deep Orange
+            '#CDDC39', // Lime
+            '#03A9F4'  // Light Blue
+        ];
+
+        // If we need more colors than our predefined list, generate them
+        if (count > colors.length) {
+            // Generate distinct colors using HSL color space
+            for (let i = colors.length; i < count; i++) {
+                // Use evenly spaced hues to ensure colors are distinct
+                const hue = Math.floor((i * 137.5) % 360); // Golden angle approximation
+                const saturation = 70 + Math.random() * 20; // 70-90%
+                const lightness = 45 + Math.random() * 10; // 45-55%
+                colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+            }
+        }
+
+        // Return only the number of colors needed, and add opacity for a nicer look
+        return colors.slice(0, count).map(color => {
+            // If it's HSL, return as is
+            if (color.startsWith('hsl')) {
+                return color;
+            }
+            // For hex colors, convert to RGBA
+            return color + 'DD'; // Approx. 87% opacity 
+        });
+    }
+</script>
+{% endblock %}

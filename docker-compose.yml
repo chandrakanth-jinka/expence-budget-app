@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=development
+      - DATABASE_URL=sqlite:///expense_tracker.db
+      - SECRET_KEY=your-secret-key-here
+      - MAIL_SERVER=smtp.gmail.com
+      - MAIL_PORT=587
+      - MAIL_USE_TLS=True
+      - MAIL_USERNAME=your-email@gmail.com
+      - MAIL_PASSWORD=your-app-specific-password
+      - MAIL_DEFAULT_SENDER=your-email@gmail.com
+    volumes:
+      - .:/app
+    command: python run.py
+  # Uncomment to use PostgreSQL instead of SQLite
+  # db:
+  #   image: postgres:13
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_DB=expense_tracker
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+  # volumes:
+  #   postgres_data: 

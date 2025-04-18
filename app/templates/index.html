@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold mb-3">Welcome to Expense Tracker</h1>
+            <p class="lead text-muted">Track your expenses and manage your budgets effectively.</p>
+        </div>
+    </div>
+
+    {% if current_user.is_authenticated %}
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="display-6 text-primary mb-3">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                    <h3 class="card-title h4 mb-3">Expenses</h3>
+                    <p class="card-text text-muted mb-4">Track and manage your daily expenses with detailed
+                        categorization.</p>
+                    <a href="{{ url_for('views.expenses') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Add Expense
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="display-6 text-primary mb-3">
+                        <i class="bi bi-pie-chart"></i>
+                    </div>
+                    <h3 class="card-title h4 mb-3">Budgets</h3>
+                    <p class="card-text text-muted mb-4">Set and monitor your monthly budgets to stay on track.</p>
+                    <a href="{{ url_for('views.budgets') }}" class="btn btn-primary">
+                        <i class="bi bi-gear me-2"></i>Manage Budgets
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="display-6 text-primary mb-3">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h3 class="card-title h4 mb-3">Reports</h3>
+                    <p class="card-text text-muted mb-4">View detailed expense reports and spending analytics.</p>
+                    <a href="{{ url_for('views.reports') }}" class="btn btn-primary">
+                        <i class="bi bi-bar-chart me-2"></i>View Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-body text-center p-5">
+                    <div class="display-6 text-primary mb-4">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <h2 class="card-title h3 mb-4">Get Started Today</h2>
+                    <p class="card-text text-muted mb-4">Join thousands of users who are managing their expenses smarter
+                        with our easy-to-use tracking tools.</p>
+                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4 me-sm-3">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg px-4">
+                            <i class="bi bi-person-plus me-2"></i>Register
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

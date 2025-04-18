@@ -1,0 +1,16 @@
+.alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 300px;
+}
+
+.progress {
+    height: 5px;
+    margin-bottom: 10px;
+}
+
+.table td {
+    vertical-align: middle;
+}
