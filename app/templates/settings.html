@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-lg mx-auto px-3 py-4">
+    <div class="card bg-dark text-white rounded-3 shadow">
+        <div class="card-body">
+            <h1 class="card-title mb-4">Settings</h1>
+            <p class="card-text">Manage your application settings.</p>
+
+            <hr class="my-4">
+
+            <!-- Theme Preference Setting -->
+            <h5 class="mb-3">Theme Preference</h5>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="themeToggleSetting">
+                <label class="form-check-label" for="themeToggleSetting">Dark Mode</label>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Currency Preference Setting -->
+            <h5 class="mb-3">Currency Preference</h5>
+            <form id="currencyPreferenceForm" method="POST" action="{{ url_for('views.update_settings') }}">
+                <div class="mb-3">
+                    <label for="currency" class="form-label">Select Currency</label>
+                    <select class="form-select" id="currency" name="currency" required>
+                        <option value="$" {% if current_user.currency_preference == '$' %}selected{% endif %}>$ (USD)</option>
+                        <option value="€" {% if current_user.currency_preference == '€' %}selected{% endif %}>€ (EUR)</option>
+                        <option value="₹" {% if current_user.currency_preference == '₹' %}selected{% endif %}>₹ (INR)</option>
+                        <!-- Add more currency options as needed -->
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Save Currency</button>
+            </form>
+
+            <hr class="my-4">
+
+            <!-- Data Export -->
+            <h5 class="mb-3">Data Management</h5>
+            <a href="{{ url_for('views.export_data') }}" class="btn btn-secondary">
+                <i class="bi bi-download me-2"></i>Export Data (Excel)
+            </a>
+
+            <!-- Add other settings here -->
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const themeToggleSetting = document.getElementById('themeToggleSetting');
+        const htmlElement = document.documentElement;
+        const currencySelect = document.getElementById('currency');
+
+        // --- Theme Toggle Logic ---
+
+        // Set initial state of the toggle based on current theme
+        if (htmlElement.getAttribute('data-theme') === 'dark') {
+            themeToggleSetting.checked = true;
+        }
+
+        // Add event listener to the settings toggle
+        themeToggleSetting.addEventListener('change', function () {
+            if (this.checked) {
+                htmlElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark'); // Save preference in localStorage
+            } else {
+                htmlElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light'); // Save preference in localStorage
+            }
+            // Optional: Sync with navbar toggle (if it exists and you want immediate sync)
+            const navbarThemeToggle = document.getElementById('themeToggle');
+            if (navbarThemeToggle) {
+                // Assuming the navbar toggle updates data-theme and localStorage on its own click
+                // We just need to ensure this toggle reflects the correct state
+                themeToggleSetting.checked = htmlElement.getAttribute('data-theme') === 'dark';
+            }
+        });
+
+        // --- Currency Preference Logic ---
+
+        // TODO: Load and set the user's saved currency preference from the database
+        // Example (you'll need to fetch this from your backend):
+        // const userCurrency = "{{ current_user.currency_preference | default('$') }}"; // Assuming you store currency_preference on the User model
+        // if (currencySelect) {
+        //     currencySelect.value = userCurrency;
+        // }
+
+        // The form submission for currency is handled by the backend route (views.update_settings)
+
+        // --- Initial Sync --- (Ensure settings toggle reflects the theme loaded from localStorage/OS preference)
+        const navbarThemeToggle = document.getElementById('themeToggle');
+        if (navbarThemeToggle) {
+            // Initial sync from base.html loaded theme
+            themeToggleSetting.checked = htmlElement.getAttribute('data-theme') === 'dark';
+        }
+    });
+
+    // Optional: If you have a separate theme.js that handles the navbar toggle, 
+    // ensure it also saves the theme to localStorage.
+
+</script>
+{% endblock %}

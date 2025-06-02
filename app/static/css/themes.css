@@ -1,0 +1,164 @@
+:root {
+    /* Light theme (default) */
+    --font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --border-color: #dee2e6;
+    --card-bg: #ffffff;
+    --input-bg: #ffffff;
+    --hover-bg: #e9ecef;
+    --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --navbar-bg: #f8f9fa;
+    --navbar-text: #212529;
+    --btn-primary-bg: #0d6efd;
+    --btn-primary-text: #fff;
+    --btn-primary-hover: #0b5ed7;
+}
+
+[data-theme="dark"] {
+    --font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+    --bg-primary: #212529;
+    --bg-secondary: #343a40;
+    --text-primary: #f8f9fa;
+    --text-secondary: #adb5bd;
+    --border-color: #495057;
+    --card-bg: #343a40;
+    --input-bg: #495057;
+    --hover-bg: #495057;
+    --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
+    --navbar-bg: #23272b;
+    --navbar-text: #f8f9fa;
+    --btn-primary-bg: #2563eb;
+    --btn-primary-text: #fff;
+    --btn-primary-hover: #1d4ed8;
+}
+
+/* Apply theme variables */
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    font-family: var(--font-family);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.card {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+    box-shadow: var(--shadow);
+}
+
+.form-control {
+    background-color: var(--input-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.form-control:focus {
+    background-color: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+.table {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+.table td,
+.table th {
+    border-color: var(--border-color) !important;
+}
+
+.table-striped>tbody>tr:nth-of-type(odd) {
+    background-color: var(--hover-bg) !important;
+}
+
+.table-striped>tbody>tr:nth-of-type(even) {
+    background-color: var(--card-bg) !important;
+}
+
+.navbar {
+    background-color: var(--navbar-bg) !important;
+    color: var(--navbar-text) !important;
+    border-color: var(--border-color) !important;
+}
+
+.navbar .navbar-brand,
+.navbar .nav-link,
+.navbar .dropdown-item {
+    color: var(--navbar-text) !important;
+}
+
+.btn-primary {
+    background-color: var(--btn-primary-bg) !important;
+    color: var(--btn-primary-text) !important;
+    border: none !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--btn-primary-hover) !important;
+    color: var(--btn-primary-text) !important;
+}
+
+.btn-outline-primary {
+    color: var(--btn-primary-bg) !important;
+    border-color: var(--btn-primary-bg) !important;
+    background: transparent !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+    background-color: var(--btn-primary-bg) !important;
+    color: var(--btn-primary-text) !important;
+    border-color: var(--btn-primary-bg) !important;
+}
+
+footer {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-top: 1px solid var(--border-color) !important;
+}
+
+.page-title {
+    color: var(--text-primary) !important;
+}
+
+/* Theme toggle button styles */
+.theme-toggle {
+    display: none !important;
+}
+
+/* Navbar theme toggle button */
+.theme-toggle-navbar {
+    margin-left: 1rem;
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    color: var(--navbar-text) !important;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    transition: color 0.3s;
+}
+
+.theme-toggle-navbar:hover {
+    color: var(--btn-primary-bg) !important;
+    background: none;
+}
+
+.container {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.text-muted,
+.lead,
+.card-text.text-muted {
+    color: var(--text-secondary) !important;
+}

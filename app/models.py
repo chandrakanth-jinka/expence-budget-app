@@ -9,6 +9,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     name = db.Column(db.String(64))
+    currency_preference = db.Column(db.String(10), default='$')  # Store currency symbol
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships

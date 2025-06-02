@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
+<div class="container-lg mx-auto px-3 py-4">
     <div class="row mb-4">
         <div class="col-12 text-center">
             <h1 class="display-4 fw-bold mb-3">My Budgets</h1>
@@ -9,496 +9,552 @@
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-6 d-flex">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
-                <i class="bi bi-plus-circle me-2"></i>Set Budget
-            </button>
-        </div>
-        <div class="col-6 text-end">
-            <button class="btn btn-danger d-none" id="deleteSelectedBtn">
-                <i class="bi bi-trash me-2"></i>Delete Selected
-            </button>
+    <div class="d-flex align-items-center justify-content-between mb-3 gap-2">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBudgetModal">
+            <i class="bi bi-plus-circle me-2"></i>Set Budget
+        </button>
+        <!-- Mobile delete button -->
+        <button class="btn btn-danger d-md-none d-none" id="deleteSelectedBtnMobile" style="display: none;">
+            <i class="bi bi-trash me-2"></i>Delete Selected
+        </button>
+        <!-- Desktop delete button -->
+        <button class="btn btn-danger d-none d-md-block" id="deleteSelectedBtnDesktop" style="display: none;">
+            <i class="bi bi-trash me-2"></i>Delete Selected
+        </button>
+    </div>
+
+    <div class="card bg-dark text-white rounded-3 shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead>
+                        <tr>
+                            <th class="d-none d-md-table-cell" style="width: 40px; text-align: center;">
+                                <div class="form-check d-flex justify-content-center align-items-center m-0">
+                                    <input class="form-check-input" type="checkbox" id="selectAllBudgets">
+                                </div>
+                            </th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Spent</th>
+                            <th>Remaining</th>
+                            <th>Period</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="budgetTableBody">
+                        <!-- Budgets will be loaded here dynamically -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="selectAllBudgets">
-                                            <label class="form-check-label" for="selectAllBudgets">
-                                                Select All
-                                            </label>
-                                        </div>
-                                    </th>
-                                    <th>Category</th>
-                                    <th>Amount</th>
-                                    <th>Spent</th>
-                                    <th>Remaining</th>
-                                    <th>Period</th>
-                                    <th class="text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="budgetTableBody">
-                                <!-- Budgets will be loaded here dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
+    <!-- Toast Container for Notifications -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+        <div id="notificationToast" class="toast align-items-center text-white" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <span id="toastMessage"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel">Confirm Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="confirmationMessage">
+                    Are you sure you want to proceed with this action?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Toast Container for Notifications -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
-    <div id="notificationToast" class="toast align-items-center text-white" role="alert" aria-live="assertive"
-        aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body">
-                <i class="bi bi-info-circle me-2"></i>
-                <span id="toastMessage"></span>
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                aria-label="Close"></button>
-        </div>
-    </div>
-</div>
-
-<!-- Confirmation Modal -->
-<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="confirmationModalLabel">Confirm Action</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="confirmationMessage">
-                Are you sure you want to proceed with this action?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Budget Modal -->
-<div class="modal fade" id="addBudgetModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Set New Budget</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addBudgetForm">
-                    <div class="mb-3">
-                        <label for="category" class="form-label">Category</label>
-                        <select class="form-select" id="category" name="category" required>
-                            <option value="">Select a category</option>
-                            <option value="Food">Food</option>
-                            <option value="Transportation">Transportation</option>
-                            <option value="Housing">Housing</option>
-                            <option value="Utilities">Utilities</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Healthcare">Healthcare</option>
-                            <option value="Shopping">Shopping</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="amount" class="form-label">Amount</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" id="amount" name="amount" step="0.01" required>
+    <!-- Add Budget Modal -->
+    <div class="modal fade" id="addBudgetModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Set New Budget</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addBudgetForm">
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Select a category</option>
+                                <option value="Food">Food</option>
+                                <option value="Transportation">Transportation</option>
+                                <option value="Housing">Housing</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Healthcare">Healthcare</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Other">Other</option>
+                            </select>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="period" class="form-label">Period (YYYY-MM)</label>
-                        <input type="month" class="form-control" id="period" name="period" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveBudgetBtn">Save Budget</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Budget Modal -->
-<div class="modal fade" id="editBudgetModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Budget</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editBudgetForm">
-                    <input type="hidden" id="editBudgetId">
-                    <div class="mb-3">
-                        <label for="editCategory" class="form-label">Category</label>
-                        <select class="form-select" id="editCategory" name="category" required>
-                            <option value="">Select a category</option>
-                            <option value="Food">Food</option>
-                            <option value="Transportation">Transportation</option>
-                            <option value="Housing">Housing</option>
-                            <option value="Utilities">Utilities</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Healthcare">Healthcare</option>
-                            <option value="Shopping">Shopping</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editAmount" class="form-label">Amount</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" id="editAmount" name="amount" step="0.01"
-                                required>
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ current_user.currency_preference }}</span>
+                                <input type="number" class="form-control" id="amount" name="amount" step="0.01"
+                                    required>
+                            </div>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editPeriod" class="form-label">Period (YYYY-MM)</label>
-                        <input type="month" class="form-control" id="editPeriod" name="period" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="updateBudgetBtn">Update Budget</button>
+                        <div class="mb-3">
+                            <label for="period" class="form-label">Period (YYYY-MM)</label>
+                            <input type="month" class="form-control" id="period" name="period" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveBudgetBtn">Save Budget</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // Selected budgets storage
-    let selectedBudgets = new Set();
-    let allBudgets = [];
-    let notificationToast;
-    let confirmationModal;
+    <!-- Edit Budget Modal -->
+    <div class="modal fade" id="editBudgetModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Budget</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editBudgetForm">
+                        <input type="hidden" id="editBudgetId">
+                        <div class="mb-3">
+                            <label for="editCategory" class="form-label">Category</label>
+                            <select class="form-select" id="editCategory" name="category" required>
+                                <option value="">Select a category</option>
+                                <option value="Food">Food</option>
+                                <option value="Transportation">Transportation</option>
+                                <option value="Housing">Housing</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Healthcare">Healthcare</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAmount" class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ current_user.currency_preference }}</span>
+                                <input type="number" class="form-control" id="editAmount" name="amount" step="0.01"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPeriod" class="form-label">Period (YYYY-MM)</label>
+                            <input type="month" class="form-control" id="editPeriod" name="period" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="updateBudgetBtn">Update Budget</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    document.addEventListener('DOMContentLoaded', function () {
-        loadBudgets();
+    <script>
+        // Define JavaScript variable for currency preference
+        const userCurrencyPreference = {{ currency_preference | tojson }};
 
-        // Initialize toast and confirmation modal
-        notificationToast = new bootstrap.Toast(document.getElementById('notificationToast'));
-        confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        // Selected budgets storage
+        let selectedBudgets = new Set();
+        let allBudgets = [];
+        let notificationToast;
+        let confirmationModal;
 
-        // Handle Select All checkbox
-        document.getElementById('selectAllBudgets').addEventListener('change', function () {
-            const isChecked = this.checked;
-            document.querySelectorAll('.budget-select-checkbox').forEach(checkbox => {
-                checkbox.checked = isChecked;
-                const budgetId = parseInt(checkbox.getAttribute('data-id'));
-                if (isChecked) {
-                    selectedBudgets.add(budgetId);
-                } else {
-                    selectedBudgets.delete(budgetId);
-                }
+        document.addEventListener('DOMContentLoaded', function () {
+            loadBudgets();
+
+            // Initialize toast and confirmation modal
+            notificationToast = new bootstrap.Toast(document.getElementById('notificationToast'));
+            confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+
+            // Handle Select All checkbox
+            document.getElementById('selectAllBudgets').addEventListener('change', function () {
+                const isChecked = this.checked;
+                document.querySelectorAll('.budget-select-checkbox').forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                    const budgetId = parseInt(checkbox.getAttribute('data-id'));
+                    if (isChecked) {
+                        selectedBudgets.add(budgetId);
+                    } else {
+                        selectedBudgets.delete(budgetId);
+                    }
+                });
+                updateDeleteSelectedButton();
             });
-            updateDeleteSelectedButton();
-        });
 
-        // Delete selected budgets button
-        document.getElementById('deleteSelectedBtn').addEventListener('click', function () {
-            if (selectedBudgets.size > 0) {
-                showConfirmation(
-                    `Are you sure you want to delete ${selectedBudgets.size} budget${selectedBudgets.size > 1 ? 's' : ''}?`,
-                    deleteSelectedBudgets
-                );
+            // Delete selected budgets button (Desktop and Mobile)
+            const desktopDeleteBtn = document.getElementById('deleteSelectedBtnDesktop');
+            if (desktopDeleteBtn) {
+                desktopDeleteBtn.addEventListener('click', function () {
+                    if (selectedBudgets.size > 0) {
+                        showConfirmation(
+                            `Are you sure you want to delete ${selectedBudgets.size} budget${selectedBudgets.size > 1 ? 's' : ''}?`,
+                            deleteSelectedBudgets
+                        );
+                    }
+                });
             }
-        });
 
-        // Set default period value to current month
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = (now.getMonth() + 1).toString().padStart(2, '0');
-        const currentPeriod = `${year}-${month}`;
+            const mobileDeleteBtn = document.getElementById('deleteSelectedBtnMobile');
+            if (mobileDeleteBtn) {
+                mobileDeleteBtn.addEventListener('click', function () {
+                    if (selectedBudgets.size > 0) {
+                        showConfirmation(
+                            `Are you sure you want to delete ${selectedBudgets.size} budget${selectedBudgets.size > 1 ? 's' : ''}?`,
+                            deleteSelectedBudgets
+                        );
+                    }
+                });
+            }
 
-        document.getElementById('period').value = currentPeriod;
+            // Set default period value to current month
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const currentPeriod = `${year}-${month}`;
 
-        // Save new budget
-        document.getElementById('saveBudgetBtn').addEventListener('click', function () {
-            saveBudget();
-        });
+            document.getElementById('period').value = currentPeriod;
 
-        // Update existing budget
-        document.getElementById('updateBudgetBtn').addEventListener('click', function () {
-            updateBudget();
-        });
-    });
-
-    function loadBudgets() {
-        fetch('/api/budgets')
-            .then(response => response.json())
-            .then(data => {
-                const tableBody = document.getElementById('budgetTableBody');
-                tableBody.innerHTML = '';
-                selectedBudgets.clear();
-
-                if (!data.budgets || data.budgets.length === 0) {
-                    const row = document.createElement('tr');
-                    row.innerHTML = '<td colspan="7" class="text-center">No budgets found. Set your first budget to get started!</td>';
-                    tableBody.appendChild(row);
+            // Save new budget
+            document.getElementById('saveBudgetBtn').addEventListener('click', function () {
+                const form = document.getElementById('addBudgetForm');
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
                     return;
                 }
+                saveBudget();
+            });
 
-                allBudgets = data.budgets;
+            // Update budget
+            document.getElementById('updateBudgetBtn').addEventListener('click', function () {
+                const form = document.getElementById('editBudgetForm');
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
+                    return;
+                }
+                updateBudget();
+            });
 
-                data.budgets.forEach(budget => {
-                    const row = document.createElement('tr');
-                    const remaining = budget.amount - budget.spent;
-                    const remainingClass = remaining < 0 ? 'text-danger' : 'text-success';
+            // Reset form validation on modal close
+            document.getElementById('addBudgetModal').addEventListener('hidden.bs.modal', function () {
+                document.getElementById('addBudgetForm').classList.remove('was-validated');
+                document.getElementById('addBudgetForm').reset();
+            });
 
-                    // Format the display of period (YYYY-MM) to a more readable format
-                    const [year, month] = budget.period.split('-');
-                    const date = new Date(year, month - 1);
-                    const formattedPeriod = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+            // Reset form validation on edit modal close
+            document.getElementById('editBudgetModal').addEventListener('hidden.bs.modal', function () {
+                document.getElementById('editBudgetForm').classList.remove('was-validated');
+            });
 
-                    row.innerHTML = `
-                    <td>
-                        <div class="form-check">
-                            <input class="form-check-input budget-select-checkbox" type="checkbox" 
-                                data-id="${budget.id}" id="budget-${budget.id}">
+        });
+
+        function loadBudgets() {
+            fetch('/budgets_data') // Fetch from the new /budgets_data route
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        allBudgets = data.budgets; // Store all budgets
+                        displayBudgets(allBudgets);
+                    } else {
+                        showToast(`Error loading budgets: ${data.message}`, 'bg-danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching budgets:', error);
+                    showToast('An error occurred while fetching budgets.', 'bg-danger');
+                });
+        }
+
+        function displayBudgets(budgets) {
+            const tbody = document.getElementById('budgetTableBody');
+            tbody.innerHTML = '';
+
+            if (budgets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No budgets set yet.</td></tr>';
+                return;
+            }
+
+            budgets.forEach(budget => {
+                const row = document.createElement('tr');
+
+                // Calculate spent and remaining. Assuming budget object has 'spent' and 'remaining' attributes
+                const spentAmount = parseFloat(budget.spent || 0);
+                const remainingAmount = parseFloat(budget.remaining || budget.amount) - spentAmount;
+
+                // Format period for display
+                const periodDate = new Date(budget.period + '-01'); // Add -01 to parse correctly as date
+                const periodDisplay = periodDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+
+                row.innerHTML = `
+                    <td class="d-none d-md-table-cell" style="width: 40px; text-align: center;">
+                        <div class="form-check d-flex justify-content-center align-items-center m-0">
+                            <input class="form-check-input budget-select-checkbox" type="checkbox" data-id="${budget.id}">
                         </div>
                     </td>
                     <td>${budget.category}</td>
-                    <td>$${budget.amount.toFixed(2)}</td>
-                    <td>$${budget.spent.toFixed(2)}</td>
-                    <td class="${remainingClass}">$${remaining.toFixed(2)}</td>
-                    <td>${formattedPeriod}</td>
+                    <td>${userCurrencyPreference}${parseFloat(budget.amount).toFixed(2)}</td>
+                    <td>${userCurrencyPreference}${spentAmount.toFixed(2)}</td>
+                    <td>${userCurrencyPreference}${remainingAmount.toFixed(2)}</td>
+                    <td>${periodDisplay}</td>
                     <td class="text-end">
-                        <button class="btn btn-sm btn-primary me-2 edit-btn" data-id="${budget.id}">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editBudget(${budget.id})">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger delete-btn" data-id="${budget.id}">
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteBudget(${budget.id})">
                             <i class="bi bi-trash"></i>
                         </button>
                     </td>
                 `;
-                    tableBody.appendChild(row);
-
-                    // Add event listeners to action buttons
-                    row.querySelector('.edit-btn').addEventListener('click', () => editBudget(budget.id));
-                    row.querySelector('.delete-btn').addEventListener('click', () => {
-                        showConfirmation(
-                            'Are you sure you want to delete this budget?',
-                            () => deleteBudget(budget.id)
-                        );
-                    });
-
-                    // Add event listener for checkboxes
-                    const checkbox = row.querySelector('.budget-select-checkbox');
-                    checkbox.addEventListener('change', function () {
-                        const budgetId = parseInt(this.getAttribute('data-id'));
-                        if (this.checked) {
-                            selectedBudgets.add(budgetId);
-                        } else {
-                            selectedBudgets.delete(budgetId);
-                            document.getElementById('selectAllBudgets').checked = false;
-                        }
-                        updateDeleteSelectedButton();
-                    });
-                });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('Error loading budgets. Please try again later.', 'bg-danger');
+                tbody.appendChild(row);
             });
-    }
 
-    function showToast(message, bgClass = 'bg-primary') {
-        const toast = document.getElementById('notificationToast');
-        // Remove any existing color classes
-        toast.className = toast.className.replace(/bg-\w+/g, '');
-        // Add the new color class
-        toast.classList.add('toast', 'align-items-center', 'text-white', bgClass);
+            // Add event listeners to the new checkboxes
+            document.querySelectorAll('.budget-select-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', handleCheckboxChange);
+            });
 
-        document.getElementById('toastMessage').textContent = message;
-        notificationToast.show();
-    }
-
-    function showConfirmation(message, confirmCallback) {
-        document.getElementById('confirmationMessage').textContent = message;
-        document.getElementById('confirmActionBtn').onclick = function () {
-            confirmationModal.hide();
-            confirmCallback();
-        };
-        confirmationModal.show();
-    }
-
-    function updateDeleteSelectedButton() {
-        const deleteBtn = document.getElementById('deleteSelectedBtn');
-        if (selectedBudgets.size > 0) {
-            deleteBtn.classList.remove('d-none');
-            deleteBtn.textContent = `Delete Selected (${selectedBudgets.size})`;
-        } else {
-            deleteBtn.classList.add('d-none');
+            updateDeleteSelectedButton(); // Update button visibility after displaying budgets
         }
-    }
 
-    function deleteSelectedBudgets() {
-        const budgetIds = Array.from(selectedBudgets);
+        function handleCheckboxChange(event) {
+            const budgetId = parseInt(event.target.getAttribute('data-id'));
+            if (event.target.checked) {
+                selectedBudgets.add(budgetId);
+            } else {
+                selectedBudgets.delete(budgetId);
+            }
+            updateDeleteSelectedButton();
+        }
 
-        // Create a queue for deleting budgets one at a time
-        let deleteQueue = [...budgetIds];
+        function updateDeleteSelectedButton() {
+            const desktopButton = document.getElementById('deleteSelectedBtnDesktop');
+            const mobileButton = document.getElementById('deleteSelectedBtnMobile');
 
-        function processDeleteQueue() {
-            if (deleteQueue.length === 0) {
-                loadBudgets();
-                showToast(`Successfully deleted ${budgetIds.length} budget${budgetIds.length > 1 ? 's' : ''}`, 'bg-success');
+            if (selectedBudgets.size > 0) {
+                if (desktopButton) desktopButton.style.display = 'block';
+                if (mobileButton) mobileButton.style.display = 'block';
+            } else {
+                if (desktopButton) desktopButton.style.display = 'none';
+                if (mobileButton) mobileButton.style.display = 'none';
+            }
+        }
+
+        // Function to show a toast notification
+        function showToast(message, className = 'bg-primary') {
+            const toastElement = document.getElementById('notificationToast');
+            const toastMessageElement = document.getElementById('toastMessage');
+
+            // Remove previous background classes and add the new one
+            toastElement.classList.remove('bg-primary', 'bg-success', 'bg-warning', 'bg-danger');
+            toastElement.classList.add(className);
+
+            toastMessageElement.textContent = message;
+            notificationToast.show();
+        }
+
+        // Function to show the confirmation modal
+        function showConfirmation(message, confirmCallback) {
+            document.getElementById('confirmationMessage').textContent = message;
+            const confirmBtn = document.getElementById('confirmActionBtn');
+
+            // Remove any previous event listeners
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+            newConfirmBtn.addEventListener('click', function () {
+                confirmCallback();
+                confirmationModal.hide();
+            });
+
+            confirmationModal.show();
+        }
+
+        // Function to save a new budget
+        function saveBudget() {
+            const amount = document.getElementById('amount').value;
+            const category = document.getElementById('category').value;
+            const period = document.getElementById('period').value;
+
+            const formData = {
+                amount: parseFloat(amount),
+                category: category,
+                period: period
+            };
+
+            fetch('/budgets', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'bg-success');
+                        loadBudgets(); // Reload budgets after saving
+                        const addBudgetModal = bootstrap.Modal.getInstance(document.getElementById('addBudgetModal'));
+                        addBudgetModal.hide(); // Hide the modal
+                        document.getElementById('addBudgetForm').reset(); // Reset the form
+                        // Set default period value to current month after reset
+                        const now = new Date();
+                        const year = now.getFullYear();
+                        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                        document.getElementById('period').value = `${year}-${month}`;
+
+                    } else {
+                        showToast(`Error: ${data.message}`, 'bg-danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving budget:', error);
+                    showToast('An error occurred while saving the budget.', 'bg-danger');
+                });
+        }
+
+        // Function to update an existing budget
+        function updateBudget() {
+            const budgetId = document.getElementById('editBudgetId').value;
+            const amount = document.getElementById('editAmount').value;
+            const category = document.getElementById('editCategory').value;
+            const period = document.getElementById('editPeriod').value;
+
+            const formData = {
+                amount: parseFloat(amount),
+                category: category,
+                period: period
+            };
+
+            fetch(`/budgets/${budgetId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'bg-success');
+                        loadBudgets(); // Reload budgets after updating
+                        const editBudgetModal = bootstrap.Modal.getInstance(document.getElementById('editBudgetModal'));
+                        editBudgetModal.hide(); // Hide the modal
+                    } else {
+                        showToast(`Error: ${data.message}`, 'bg-danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating budget:', error);
+                    showToast('An error occurred while updating the budget.', 'bg-danger');
+                });
+        }
+
+        // Function to delete selected budgets
+        function deleteSelectedBudgets() {
+            if (selectedBudgets.size === 0) {
+                showToast('No budgets selected for deletion.', 'bg-warning');
                 return;
             }
 
-            const budgetId = deleteQueue.shift();
+            // Convert Set to Array for the fetch request body
+            const budgetIds = Array.from(selectedBudgets);
 
-            fetch(`/api/budgets/${budgetId}`, {
-                method: 'DELETE'
+            fetch('/budgets', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ids: budgetIds })
             })
-                .then(() => {
-                    // Continue with next budget
-                    processDeleteQueue();
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'bg-success');
+                        selectedBudgets.clear(); // Clear selected items
+                        document.getElementById('selectAllBudgets').checked = false; // Uncheck select all
+                        loadBudgets(); // Reload budgets after deletion
+                    } else {
+                        showToast(`Error deleting budgets: ${data.message}`, 'bg-danger');
+                    }
                 })
                 .catch(error => {
-                    console.error('Error deleting budget:', error);
-                    // Continue with remaining budgets
-                    processDeleteQueue();
+                    console.error('Error deleting budgets:', error);
+                    showToast('An error occurred while deleting budgets.', 'bg-danger');
                 });
         }
 
-        // Start the deletion process
-        processDeleteQueue();
-    }
-
-    function editBudget(id) {
-        const budget = allBudgets.find(b => b.id === id);
-        if (!budget) return;
-
-        document.getElementById('editBudgetId').value = budget.id;
-        document.getElementById('editCategory').value = budget.category;
-        document.getElementById('editAmount').value = budget.amount;
-        document.getElementById('editPeriod').value = budget.period;
-
-        new bootstrap.Modal(document.getElementById('editBudgetModal')).show();
-    }
-
-    function saveBudget() {
-        const category = document.getElementById('category').value;
-        const amount = document.getElementById('amount').value;
-        const period = document.getElementById('period').value;
-
-        if (!category || !amount || !period) {
-            showToast('Please fill in all fields', 'bg-warning');
-            return;
+        // Function to delete a single budget (used by action button)
+        function deleteBudget(budgetId) {
+            showConfirmation(`Are you sure you want to delete this budget?`, function () {
+                fetch(`/budgets/${budgetId}`, {
+                    method: 'DELETE'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message, 'bg-success');
+                            // Remove the deleted budget from selected list if it was there
+                            selectedBudgets.delete(budgetId);
+                            loadBudgets(); // Reload budgets after deletion
+                        } else {
+                            showToast(`Error deleting budget: ${data.message}`, 'bg-danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting budget:', error);
+                        showToast('An error occurred while deleting the budget.', 'bg-danger');
+                    });
+            });
         }
 
-        fetch('/api/budgets', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                category: category,
-                amount: parseFloat(amount),
-                period: period
-            }),
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.message || 'Failed to save budget');
-                }
-                // Clear the form
-                document.getElementById('category').value = '';
-                document.getElementById('amount').value = '';
-                document.getElementById('period').value = '';
+        // Function to fetch data for editing a single budget
+        function editBudget(budgetId) {
+            // Find the budget in the already loaded allBudgets array
+            const budgetToEdit = allBudgets.find(bud => bud.id === budgetId);
 
-                // Close the modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('addBudgetModal'));
-                modal.hide();
+            if (budgetToEdit) {
+                // Populate the edit modal form
+                document.getElementById('editBudgetId').value = budgetToEdit.id;
+                document.getElementById('editCategory').value = budgetToEdit.category;
+                document.getElementById('editAmount').value = parseFloat(budgetToEdit.amount).toFixed(2);
+                document.getElementById('editPeriod').value = budgetToEdit.period; // Period is already YYYY-MM format
 
-                // Reload budgets
-                loadBudgets();
-                showToast('Budget saved successfully!', 'bg-success');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast(error.message || 'Error saving budget', 'bg-danger');
-            });
-    }
-
-    function updateBudget() {
-        const id = document.getElementById('editBudgetId').value;
-        const category = document.getElementById('editCategory').value;
-        const amount = document.getElementById('editAmount').value;
-        const period = document.getElementById('editPeriod').value;
-
-        if (!category || !amount || !period) {
-            showToast('Please fill in all fields', 'bg-warning');
-            return;
+                // Show the edit modal
+                const editBudgetModal = new bootstrap.Modal(document.getElementById('editBudgetModal'));
+                editBudgetModal.show();
+            } else {
+                showToast('Budget details not found.', 'bg-danger');
+            }
         }
 
-        fetch(`/api/budgets/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                category: category,
-                amount: parseFloat(amount),
-                period: period
-            }),
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.message || 'Failed to update budget');
-                }
 
-                // Close the modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('editBudgetModal'));
-                modal.hide();
-
-                // Reload budgets
-                loadBudgets();
-                showToast('Budget updated successfully!', 'bg-success');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast(error.message || 'Error updating budget', 'bg-danger');
-            });
-    }
-
-    function deleteBudget(id) {
-        fetch(`/api/budgets/${id}`, {
-            method: 'DELETE',
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.message || 'Failed to delete budget');
-                }
-                loadBudgets();
-                showToast('Budget deleted successfully!', 'bg-success');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast(error.message || 'Error deleting budget', 'bg-danger');
-            });
-    }
-</script>
-{% endblock %}
+    </script>
+    {% endblock %}
